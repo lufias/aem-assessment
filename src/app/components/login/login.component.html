@@ -1,0 +1,29 @@
+<div class="login-container">
+  <div class="login-card">
+    <h2 class="login-title">Sign in to your dashboard</h2>
+
+    <form [formGroup]="loginForm" (ngSubmit)="onSubmit()">
+      <div class="form-group">
+        <input
+          type="text"
+          class="form-control"
+          placeholder="Username"
+          formControlName="username"
+        />
+      </div>
+
+      <div class="form-group">
+        <input
+          type="password"
+          class="form-control"
+          placeholder="Password"
+          formControlName="password"
+        />
+      </div>
+
+      <button type="submit" class="btn btn-primary btn-signin">
+        SIGN IN
+      </button>
+    </form>
+  </div>
+</div>

@@ -81,3 +81,15 @@ import { NgChartsModule } from 'ng2-charts';
 ## Bootstrap Integration
 
 Bootstrap 4 CSS and JS are globally available via angular.json. Use Bootstrap classes directly in templates.
+
+## Windows File Paths in WSL
+
+When the user shares a Windows file path (e.g., `c:/Users/Saiful/Desktop/image.png`), convert it to the WSL mount point path before accessing:
+
+- **Windows path**: `c:/Users/Saiful/Desktop/image.png`
+- **WSL path**: `/mnt/c/Users/Saiful/Desktop/image.png`
+
+**Conversion rule**: Replace the drive letter prefix (e.g., `c:/` or `C:\`) with `/mnt/c/` (lowercase drive letter).
+
+## CLI Shortcut
+- Typing `>gcm` tells Claude to look at the staged changes, craft an appropriate commit message, and run `git commit -m "<message>"`; if nothing is staged, call it out instead of committing.
