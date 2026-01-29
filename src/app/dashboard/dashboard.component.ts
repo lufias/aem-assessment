@@ -1,18 +1,86 @@
-import { Component } from '@angular/core';
+import { Component, OnInit } from '@angular/core';
 import { Store } from '@ngrx/store';
 import { Observable } from 'rxjs';
-import { LoginActions, selectLoginToken } from '../auth/store';
+import { map } from 'rxjs/operators';
+import { ChartConfiguration, ChartData } from 'chart.js';
+import { LoginActions } from '../auth/store';
+import {
+  DashboardActions,
+  selectChartDonut,
+  selectChartBar,
+  selectTableUsers,
+  selectDashboardLoading,
+  selectDashboardError
+} from './store';
+import { TableUser } from './services/dashboard.service';
 
 @Component({
   selector: 'app-dashboard',
   templateUrl: './dashboard.component.html',
   styleUrls: ['./dashboard.component.scss']
 })
-export class DashboardComponent {
-  token$: Observable<string | null>;
+export class DashboardComponent implements OnInit {
+  loading$: Observable<boolean>;
+  error$: Observable<string | null>;
+  tableUsers$: Observable<TableUser[]>;
+
+  donutChartData$: Observable<ChartData<'doughnut'>>;
+  barChartData$: Observable<ChartData<'bar'>>;
+
+  donutChartOptions: ChartConfiguration<'doughnut'>['options'] = {
+    responsive: true,
+    maintainAspectRatio: false,
+    plugins: {
+      legend: {
+        display: true,
+        position: 'bottom'
+      }
+    }
+  };
+
+  barChartOptions: ChartConfiguration<'bar'>['options'] = {
+    responsive: true,
+    maintainAspectRatio: false,
+    plugins: {
+      legend: {
+        display: false
+      }
+    },
+    scales: {
+      y: {
+        beginAtZero: true
+      }
+    }
+  };
 
   constructor(private store: Store) {
-    this.token$ = this.store.select(selectLoginToken);
+    this.loading$ = this.store.select(selectDashboardLoading);
+    this.error$ = this.store.select(selectDashboardError);
+    this.tableUsers$ = this.store.select(selectTableUsers);
+
+    this.donutChartData$ = this.store.select(selectChartDonut).pipe(
+      map(data => ({
+        labels: data.map(item => item.name),
+        datasets: [{
+          data: data.map(item => item.value),
+          backgroundColor: ['#6c757d', '#adb5bd', '#dee2e6', '#e9ecef']
+        }]
+      }))
+    );
+
+    this.barChartData$ = this.store.select(selectChartBar).pipe(
+      map(data => ({
+        labels: data.map(item => item.name),
+        datasets: [{
+          data: data.map(item => item.value),
+          backgroundColor: '#6c757d'
+        }]
+      }))
+    );
+  }
+
+  ngOnInit(): void {
+    this.store.dispatch(DashboardActions.loadDashboard());
   }
 
   logout(): void {

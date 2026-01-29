@@ -25,11 +25,15 @@ export class AuthService {
   }
 
   setToken(token: string): void {
-    localStorage.setItem(this.TOKEN_KEY, token);
+    // API returns token as JSON string with quotes, strip them
+    const cleanToken = token.replace(/^"|"$/g, '');
+    localStorage.setItem(this.TOKEN_KEY, cleanToken);
   }
 
   getToken(): string | null {
-    return localStorage.getItem(this.TOKEN_KEY);
+    const token = localStorage.getItem(this.TOKEN_KEY);
+    // Strip quotes if present (legacy cleanup)
+    return token ? token.replace(/^"|"$/g, '') : null;
   }
 
   removeToken(): void {
