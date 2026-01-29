@@ -5,6 +5,10 @@
     </div>
 
     <form [formGroup]="loginForm" (ngSubmit)="onSubmit()">
+      <div class="api-error" *ngIf="error$ | async as error">
+        {{ error }}
+      </div>
+
       <div class="form-group">
         <input
           type="text"
@@ -31,8 +35,8 @@
         </div>
       </div>
 
-      <button type="submit" class="btn btn-primary btn-signin">
-        SIGN IN
+      <button type="submit" class="btn btn-primary btn-signin" [disabled]="isLoading$ | async">
+        {{ (isLoading$ | async) ? 'SIGNING IN...' : 'SIGN IN' }}
       </button>
     </form>
   </div>
