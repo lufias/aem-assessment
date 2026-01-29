@@ -1,27 +1,58 @@
-# AemAssessment
+# AEM Assessment
 
-This project was generated with [Angular CLI](https://github.com/angular/angular-cli) version 14.2.13.
+An Angular application for interview assessments featuring data visualization capabilities.
 
-## Development server
+## Tech Stack
 
-Run `ng serve` for a dev server. Navigate to `http://localhost:4200/`. The application will automatically reload if you change any of the source files.
+- **Angular 14** with Angular CLI
+- **NgRx 14** (Store, Effects, Entity, DevTools) for state management
+- **Bootstrap 4** for styling and UI components
+- **Chart.js 3** with ng2-charts for data visualization
+- **SCSS** for styling
+- **Karma/Jasmine** for unit testing
 
-## Code scaffolding
+## Setup
 
-Run `ng generate component component-name` to generate a new component. You can also use `ng generate directive|pipe|service|class|guard|interface|enum|module`.
+### Prerequisites
 
-## Build
+- Node.js (LTS version recommended)
+- npm
 
-Run `ng build` to build the project. The build artifacts will be stored in the `dist/` directory.
+### Installation
 
-## Running unit tests
+```bash
+# Install dependencies
+npm install
+```
 
-Run `ng test` to execute the unit tests via [Karma](https://karma-runner.github.io).
+## Commands
 
-## Running end-to-end tests
+```bash
+# Start development server at http://localhost:4200
+npm start
 
-Run `ng e2e` to execute the end-to-end tests via a platform of your choice. To use this command, you need to first add a package that implements end-to-end testing capabilities.
+# Production build (outputs to dist/aem-assessment)
+npm run build
 
-## Further help
+# Development build with watch mode
+npm run watch
 
-To get more help on the Angular CLI use `ng help` or go check out the [Angular CLI Overview and Command Reference](https://angular.io/cli) page.
+# Run unit tests via Karma
+npm test
+
+# Run a single test file
+ng test --include=**/component-name.spec.ts
+```
+
+## Code Generation
+
+```bash
+# Generate a new component
+ng generate component components/component-name
+
+# Generate a new service
+ng generate service services/service-name
+
+# Generate a new module with routing
+ng generate module modules/module-name --routing
+```
