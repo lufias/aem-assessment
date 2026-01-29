@@ -91,5 +91,28 @@ When the user shares a Windows file path (e.g., `c:/Users/Saiful/Desktop/image.p
 
 **Conversion rule**: Replace the drive letter prefix (e.g., `c:/` or `C:\`) with `/mnt/c/` (lowercase drive letter).
 
+## Testing Guidelines
+
+- **Test components only** - Do not create tests for services, reducers, selectors, or effects
+- Use behavioral testing with Angular Testing Library (`@testing-library/angular`)
+- Test from the user's perspective (what they see and interact with)
+- Use `provideMockStore` from `@ngrx/store/testing` to mock NgRx store
+- Test file naming: `component-name.component.spec.ts`
+
+Example test structure:
+```typescript
+import { render, screen, fireEvent } from '@testing-library/angular';
+import { provideMockStore } from '@ngrx/store/testing';
+
+describe('MyComponent', () => {
+  async function setup(stateOverrides = {}) {
+    const { fixture } = await render(MyComponent, {
+      providers: [provideMockStore({ initialState })]
+    });
+    // ...
+  }
+});
+```
+
 ## CLI Shortcut
 - Typing `>gcm` tells Claude to look at the staged changes, craft an appropriate commit message, and run `git commit -m "<message>"`; if nothing is staged, call it out instead of committing.

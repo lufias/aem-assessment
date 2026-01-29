@@ -31,7 +31,6 @@ export class DashboardService {
     const headers = new HttpHeaders({
       'Authorization': `Bearer ${token}`
     });
-    console.log('Dashboard API - Sending request with Authorization:', `Bearer ${token.substring(0, 20)}...`);
     return this.http.get<DashboardResponse>(`${environment.apiUrl}/dashboard`, { headers });
   }
 }

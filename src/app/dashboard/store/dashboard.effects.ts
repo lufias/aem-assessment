@@ -13,7 +13,6 @@ export class DashboardEffects {
       ofType(DashboardActions.loadDashboard),
       exhaustMap(() => {
         const token = this.authService.getToken();
-        console.log('Dashboard API - Token from localStorage:', token ? `${token.substring(0, 20)}...` : 'NULL');
         if (!token) {
           return of(DashboardActions.loadDashboardFailure({ error: 'No authentication token' }));
         }
