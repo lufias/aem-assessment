@@ -1,12 +1,16 @@
 {
   "name": "aem-assessment",
   "version": "0.0.0",
+  "main": "electron/main.js",
   "scripts": {
     "ng": "ng",
     "start": "ng serve",
     "build": "ng build",
     "watch": "ng build --watch --configuration development",
-    "test": "ng test"
+    "test": "ng test",
+    "electron": "ng build && electron . --no-sandbox",
+    "electron:dev": "ng build --configuration development && electron . --no-sandbox",
+    "electron:serve": "electron . --no-sandbox"
   },
   "private": true,
   "dependencies": {
@@ -32,6 +36,7 @@
     "zone.js": "~0.11.4"
   },
   "devDependencies": {
+    "electron": "^28.0.0",
     "@angular-devkit/build-angular": "^14.2.13",
     "@angular/cli": "~14.2.13",
     "@angular/compiler-cli": "^14.2.0",
