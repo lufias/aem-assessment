@@ -18,16 +18,23 @@ export class LoginEffects {
           return this.tryOfflineLogin(credentials);
         }
 
-        // Online - try API first
-        return this.authService.login(credentials).pipe(
-          timeout(10000), // 10 second timeout for API call
-          map(token => LoginActions.loginSuccess({ token, credentials })),
-          catchError(error => {
-            // Check if it's a network error (offline scenario)
-            if (this.isNetworkError(error)) {
-              return this.tryOfflineLogin(credentials);
-            }
-            return of(LoginActions.loginFailure({ error: error.error || 'Login failed' }));
+        // First check if we have cached credentials - if so, use shorter timeout
+        return from(this.pouchDBService.hasOfflineCredentials(credentials.username)).pipe(
+          switchMap(hasCached => {
+            // Use shorter timeout (3s) if we have cached credentials to fall back to
+            const timeoutMs = hasCached ? 3000 : 10000;
+
+            return this.authService.login(credentials).pipe(
+              timeout(timeoutMs),
+              map(token => LoginActions.loginSuccess({ token, credentials })),
+              catchError(error => {
+                // Check if it's a network error (offline scenario)
+                if (this.isNetworkError(error)) {
+                  return this.tryOfflineLogin(credentials);
+                }
+                return of(LoginActions.loginFailure({ error: error.error || 'Login failed' }));
+              })
+            );
           })
         );
       })

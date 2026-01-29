@@ -127,18 +127,35 @@ export class PouchDBService {
   }
 
   /**
+   * Check if offline credentials exist for a user (without validating password)
+   */
+  async hasOfflineCredentials(username: string): Promise<boolean> {
+    const docId = `credentials_${username.toLowerCase()}`;
+    try {
+      await this.db.get(docId);
+      return true;
+    } catch {
+      return false;
+    }
+  }
+
+  /**
    * Validate credentials against stored hash (for offline login)
    * Tries both SHA-256 and fallback hash for compatibility
    */
   async validateOfflineCredentials(username: string, password: string): Promise<{ valid: boolean; token?: string }> {
     const docId = `credentials_${username.toLowerCase()}`;
+    console.log('Validating offline credentials for:', docId);
 
     try {
       const doc = await this.db.get(docId) as StoredCredentials;
+      console.log('Found stored credentials, stored hash:', doc.passwordHash?.substring(0, 16) + '...');
 
       // Try current hash method
       const inputHash = await this.hashPassword(password);
+      console.log('Input hash (current method):', inputHash?.substring(0, 16) + '...');
       if (doc.passwordHash === inputHash) {
+        console.log('Password matched with current hash method');
         return { valid: true, token: doc.token };
       }
 
@@ -146,22 +163,28 @@ export class PouchDBService {
       if (typeof crypto !== 'undefined' && crypto.subtle) {
         try {
           const sha256Hash = await this.sha256Hash(password);
+          console.log('Input hash (SHA-256):', sha256Hash?.substring(0, 16) + '...');
           if (doc.passwordHash === sha256Hash) {
+            console.log('Password matched with SHA-256');
             return { valid: true, token: doc.token };
           }
-        } catch {
-          // Ignore, already tried other method
+        } catch (e) {
+          console.log('SHA-256 hash failed:', e);
         }
       }
 
       // Try simple hash as fallback (in case stored hash used it)
       const simpleHashResult = this.simpleHash(password);
+      console.log('Input hash (simple):', simpleHashResult?.substring(0, 16) + '...');
       if (doc.passwordHash === simpleHashResult) {
+        console.log('Password matched with simple hash');
         return { valid: true, token: doc.token };
       }
 
+      console.log('No hash matched');
       return { valid: false };
     } catch (err: any) {
+      console.log('Error validating credentials:', err);
       if (err.status === 404) {
         return { valid: false };
       }
@@ -196,6 +219,18 @@ export class PouchDBService {
     };
 
     await this.upsert(docId, newDoc);
+  }
+
+  /**
+   * Check if cached dashboard data exists
+   */
+  async hasCachedDashboard(): Promise<boolean> {
+    try {
+      await this.db.get('dashboard_cache');
+      return true;
+    } catch {
+      return false;
+    }
   }
 
   /**
