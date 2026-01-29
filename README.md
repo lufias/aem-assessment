@@ -1,10 +1,11 @@
 # AEM Assessment
 
-An Angular application for interview assessments featuring data visualization capabilities.
+An Angular + Electron desktop application for interview assessments featuring data visualization capabilities.
 
 ## Tech Stack
 
 - **Angular 14** with Angular CLI
+- **Electron 28** for desktop application
 - **NgRx 14** (Store, Effects, Entity, DevTools) for state management
 - **Bootstrap 4** for styling and UI components
 - **Chart.js 3** with ng2-charts for data visualization
@@ -42,6 +43,31 @@ npm test
 
 # Run a single test file
 ng test --include=**/component-name.spec.ts
+```
+
+### Electron (Desktop App)
+
+```bash
+# Build Angular and launch Electron (production)
+npm run electron
+
+# Build Angular (dev) and launch Electron
+npm run electron:dev
+
+# Launch Electron only (assumes already built)
+npm run electron:serve
+```
+
+## Project Structure
+
+```
+├── electron/
+│   ├── main.js          # Electron main process
+│   └── preload.js       # Preload script for IPC
+├── src/
+│   └── app/             # Angular application
+├── dist/                # Built application (generated)
+└── package.json
 ```
 
 ## Code Generation
