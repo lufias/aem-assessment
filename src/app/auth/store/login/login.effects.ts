@@ -1,9 +1,10 @@
 import { Injectable } from '@angular/core';
 import { Router } from '@angular/router';
 import { Actions, createEffect, ofType } from '@ngrx/effects';
-import { of } from 'rxjs';
-import { map, exhaustMap, catchError, tap } from 'rxjs/operators';
+import { of, from, TimeoutError } from 'rxjs';
+import { map, exhaustMap, catchError, tap, timeout } from 'rxjs/operators';
 import { AuthService } from '../../services/auth.service';
+import { PouchDBService } from '../../../core/services/pouchdb.service';
 import * as LoginActions from './login.actions';
 
 @Injectable()
@@ -13,10 +14,34 @@ export class LoginEffects {
       ofType(LoginActions.login),
       exhaustMap(({ credentials }) =>
         this.authService.login(credentials).pipe(
-          map(token => LoginActions.loginSuccess({ token })),
-          catchError(error =>
-            of(LoginActions.loginFailure({ error: error.error || 'Login failed' }))
-          )
+          timeout(10000), // 10 second timeout for API call
+          map(token => LoginActions.loginSuccess({ token, credentials })),
+          catchError(error => {
+            // Check if it's a network error (offline scenario)
+            if (this.isNetworkError(error)) {
+              // Try offline validation
+              return from(this.pouchDBService.validateOfflineCredentials(
+                credentials.username,
+                credentials.password
+              )).pipe(
+                map(result => {
+                  if (result.valid && result.token) {
+                    return LoginActions.loginSuccess({
+                      token: result.token,
+                      isOffline: true
+                    });
+                  }
+                  return LoginActions.loginFailure({
+                    error: 'No network connection and no offline credentials found'
+                  });
+                }),
+                catchError(() => of(LoginActions.loginFailure({
+                  error: 'Offline validation failed'
+                })))
+              );
+            }
+            return of(LoginActions.loginFailure({ error: error.error || 'Login failed' }));
+          })
         )
       )
     )
@@ -25,7 +50,21 @@ export class LoginEffects {
   loginSuccess$ = createEffect(() =>
     this.actions$.pipe(
       ofType(LoginActions.loginSuccess),
-      tap(() => this.router.navigate(['/dashboard']))
+      tap(({ token, credentials, isOffline }) => {
+        // Store token in localStorage
+        this.authService.setToken(token);
+
+        // Store credentials in PouchDB for offline login (only if online login)
+        if (credentials && !isOffline) {
+          this.pouchDBService.storeCredentials(
+            credentials.username,
+            credentials.password,
+            token
+          ).catch(err => console.error('Failed to store offline credentials:', err));
+        }
+
+        this.router.navigate(['/dashboard']);
+      })
     ),
     { dispatch: false }
   );
@@ -35,15 +74,34 @@ export class LoginEffects {
       ofType(LoginActions.logout),
       tap(() => {
         this.authService.removeToken();
+        // Optionally clear PouchDB data on logout
+        // Uncomment the next line if you want to clear offline data on logout
+        // this.pouchDBService.clearAllData();
         this.router.navigate(['/login']);
       })
     ),
     { dispatch: false }
   );
 
+  private isNetworkError(error: any): boolean {
+    // Check for common network error indicators
+    return (
+      error instanceof TimeoutError ||
+      error.name === 'TimeoutError' ||
+      error.status === 0 ||
+      error.status === undefined ||
+      (error.name === 'HttpErrorResponse' && error.status === 0) ||
+      error.message?.includes('network') ||
+      error.message?.includes('Failed to fetch') ||
+      error.message?.includes('timeout') ||
+      !navigator.onLine
+    );
+  }
+
   constructor(
     private actions$: Actions,
     private authService: AuthService,
+    private pouchDBService: PouchDBService,
     private router: Router
   ) {}
 }
