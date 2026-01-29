@@ -79,24 +79,47 @@ export class PouchDBService {
     const passwordHash = await this.hashPassword(password);
     const docId = `credentials_${username.toLowerCase()}`;
 
+    const newDoc: StoredCredentials = {
+      _id: docId,
+      type: 'credentials',
+      username: username.toLowerCase(),
+      passwordHash,
+      token,
+      lastLogin: Date.now()
+    };
+
+    await this.upsert(docId, newDoc);
+  }
+
+  /**
+   * Upsert helper - uses allDocs to get current rev, then puts
+   */
+  private async upsert(docId: string, newDoc: any): Promise<void> {
     try {
-      const existingDoc = await this.db.get(docId) as StoredCredentials;
-      await this.db.put({
-        ...existingDoc,
-        passwordHash,
-        token,
-        lastLogin: Date.now()
-      });
+      // Get current revision if document exists
+      const result = await this.db.allDocs({ keys: [docId] });
+      const row = result.rows[0] as any;
+
+      if (row && !row.error && row.value && !row.value.deleted) {
+        // Document exists - include _rev
+        newDoc._rev = row.value.rev;
+      }
+
+      await this.db.put(newDoc);
+      console.log(`Document ${docId} saved successfully`);
     } catch (err: any) {
-      if (err.status === 404) {
-        await this.db.put({
-          _id: docId,
-          type: 'credentials',
-          username: username.toLowerCase(),
-          passwordHash,
-          token,
-          lastLogin: Date.now()
-        } as StoredCredentials);
+      if (err.status === 409) {
+        // Conflict - try one more time with fresh rev
+        console.log(`Conflict on ${docId}, retrying...`);
+        try {
+          const doc = await this.db.get(docId);
+          newDoc._rev = doc._rev;
+          await this.db.put(newDoc);
+          console.log(`Document ${docId} saved on retry`);
+        } catch (retryErr) {
+          console.error(`Failed to save ${docId} on retry:`, retryErr);
+          throw retryErr;
+        }
       } else {
         throw err;
       }
@@ -163,29 +186,16 @@ export class PouchDBService {
   async storeDashboardData(chartDonut: any[], chartBar: any[], tableUsers: any[]): Promise<void> {
     const docId = 'dashboard_cache';
 
-    try {
-      const existingDoc = await this.db.get(docId) as StoredDashboardData;
-      await this.db.put({
-        ...existingDoc,
-        chartDonut,
-        chartBar,
-        tableUsers,
-        cachedAt: Date.now()
-      });
-    } catch (err: any) {
-      if (err.status === 404) {
-        await this.db.put({
-          _id: docId,
-          type: 'dashboard',
-          chartDonut,
-          chartBar,
-          tableUsers,
-          cachedAt: Date.now()
-        } as StoredDashboardData);
-      } else {
-        throw err;
-      }
-    }
+    const newDoc: StoredDashboardData = {
+      _id: docId,
+      type: 'dashboard',
+      chartDonut,
+      chartBar,
+      tableUsers,
+      cachedAt: Date.now()
+    };
+
+    await this.upsert(docId, newDoc);
   }
 
   /**
