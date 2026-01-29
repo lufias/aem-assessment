@@ -58,12 +58,15 @@ export class DashboardComponent implements OnInit {
     this.error$ = this.store.select(selectDashboardError);
     this.tableUsers$ = this.store.select(selectTableUsers);
 
+    const chartColors = ['#FF6384', '#36A2EB', '#FFCE56', '#4BC0C0', '#9966FF', '#FF9F40'];
+
     this.donutChartData$ = this.store.select(selectChartDonut).pipe(
       map(data => ({
         labels: data.map(item => item.name),
         datasets: [{
           data: data.map(item => item.value),
-          backgroundColor: ['#6c757d', '#adb5bd', '#dee2e6', '#e9ecef']
+          backgroundColor: chartColors,
+          hoverBackgroundColor: chartColors
         }]
       }))
     );
@@ -73,7 +76,8 @@ export class DashboardComponent implements OnInit {
         labels: data.map(item => item.name),
         datasets: [{
           data: data.map(item => item.value),
-          backgroundColor: '#6c757d'
+          backgroundColor: chartColors,
+          hoverBackgroundColor: chartColors
         }]
       }))
     );
